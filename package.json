@@ -1,0 +1,7 @@
+{
+  "name": "hospital-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}
