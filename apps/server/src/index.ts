@@ -4,6 +4,7 @@ import { Server as IOServer } from 'socket.io'
 import cors from 'cors'
 import dotenv from 'dotenv'
 
+import prisma from './prisma'
 import authRouter from './routes/auth'
 import usersRouter from './routes/users'
 import patientsRouter from './routes/patients'
@@ -45,7 +46,21 @@ app.use('/api/consultations', consultationsRouter)
 app.use('/api/medicines', medicinesRouter)
 app.use('/api/pharmacy', pharmacyRouter)
 
+async function ensureStartup() {
+  try {
+    await prisma.$executeRawUnsafe(`CREATE SEQUENCE IF NOT EXISTS patient_token_seq START 1`)
+    console.log('Ensured patient_token_seq exists')
+  } catch (err) {
+    console.warn('Could not ensure sequence:', err)
+  }
+}
+
 const PORT = process.env.PORT || 4000
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`)
-})
+
+ensureStartup()
+  .catch((e) => console.error('Startup sequence error', e))
+  .finally(() => {
+    server.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`)
+    })
+  })
