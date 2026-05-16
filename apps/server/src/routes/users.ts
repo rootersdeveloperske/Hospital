@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import prisma from '../prisma'
 import { authMiddleware, requireRole, AuthRequest } from '../middleware/auth'
+import { sendEmail } from '../utils/mailer'
 
 const router = Router()
 
@@ -33,6 +34,13 @@ router.put('/approve/:id', authMiddleware, requireRole('ADMIN'), async (req: Aut
       console.warn('socket emit failed for doctor-approved', e)
     }
 
+    // send email notification if configured
+    try {
+      await sendEmail(updated.email, 'Your doctor account is approved', `Hello ${updated.name},\n\nYour account has been approved by admin. You can now log in.`, `<p>Hello ${updated.name},</p><p>Your account has been <strong>approved</strong> by admin. You can now log in.</p>`)
+    } catch (e) {
+      console.warn('Failed to send approval email', e)
+    }
+
     return res.json({ user: { id: updated.id, email: updated.email, name: updated.name, isApproved: updated.isApproved } })
   } catch (err) {
     console.error(err)
@@ -50,6 +58,13 @@ router.put('/reject/:id', authMiddleware, requireRole('ADMIN'), async (req: Auth
 
     // For simplicity, we'll delete the user on rejection. Alternately, you could set a rejected flag.
     await prisma.user.delete({ where: { id } })
+
+    // Optionally send email to notify rejection
+    try {
+      await sendEmail(user.email, 'Your doctor registration was rejected', `Hello ${user.name},\n\nYour registration was rejected by admin.`, `<p>Hello ${user.name},</p><p>Your registration was <strong>rejected</strong> by admin.</p>`)
+    } catch (e) {
+      console.warn('Failed to send rejection email', e)
+    }
 
     return res.json({ message: 'Doctor rejected and removed' })
   } catch (err) {

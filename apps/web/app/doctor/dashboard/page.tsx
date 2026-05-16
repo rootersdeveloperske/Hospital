@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { getSocket } from '@/lib/socket'
 import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
 
 type Patient = {
   id: string
@@ -45,7 +46,10 @@ export default function DoctorDashboard() {
   useEffect(() => {
     const socket = getSocket()
     socket.on('new-token', (data: any) => {
-      if (data?.patient) setUnassigned((s) => [...s, data.patient])
+      if (data?.patient) {
+        setUnassigned((s) => [...s, data.patient])
+        toast.info(`New token: #${String(data.patient.tokenNo).padStart(2,'0')} - ${data.patient.name}`)
+      }
     })
     socket.on('consultation-assigned', (data: any) => {
       if (data?.consultation) setMyPending((s) => [...s, data.consultation])
@@ -54,6 +58,7 @@ export default function DoctorDashboard() {
 
     socket.on('consultation-completed', (data: any) => {
       setMyPending((s) => s.filter((c) => c.id !== data.consultation?.id))
+      toast.success('Consultation completed')
     })
 
     return () => {
@@ -64,7 +69,7 @@ export default function DoctorDashboard() {
   }, [])
 
   async function startConsultation(tokenNo: number) {
-    if (!userId) return alert('Missing userId - please login')
+    if (!userId) return toast.error('Missing userId - please login')
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/api/consultations/start`, {
         method: 'POST',
@@ -72,11 +77,11 @@ export default function DoctorDashboard() {
         body: JSON.stringify({ doctorId: userId, tokenNo })
       })
       const json = await res.json()
-      if (!res.ok) return alert('Error: ' + (json.message || 'Could not start'))
+      if (!res.ok) return toast.error('Error: ' + (json.message || 'Could not start'))
       // navigate to consultation form
       router.push(`/doctor/consultation/${json.consultation.id}`)
     } catch (err: any) {
-      alert('Network error: ' + String(err.message || err))
+      toast.error('Network error: ' + String(err.message || err))
     }
   }
 

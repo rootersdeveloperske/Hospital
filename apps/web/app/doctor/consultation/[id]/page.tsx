@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+import toast from 'react-hot-toast'
 
 const schema = z.object({
   notes: z.string().optional(),
@@ -53,6 +54,7 @@ export default function ConsultationPage() {
       } catch (err) {
         console.error(err)
         setLoading(false)
+        toast.error('Failed to load consultation or medicines')
       }
     }
     load()
@@ -66,11 +68,11 @@ export default function ConsultationPage() {
         body: JSON.stringify({ consultationId, notes: values.notes, followUpDate: values.followUpDate, prescriptions: values.prescriptions })
       })
       const json = await res.json()
-      if (!res.ok) return alert('Error: ' + (json.message || 'Could not save'))
-      alert('Consultation saved')
+      if (!res.ok) return toast.error('Error: ' + (json.message || 'Could not save'))
+      toast.success('Consultation saved')
       router.push('/doctor/dashboard')
     } catch (err: any) {
-      alert('Network error: ' + String(err.message || err))
+      toast.error('Network error: ' + String(err.message || err))
     }
   }
 

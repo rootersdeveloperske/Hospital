@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { getSocket } from '@/lib/socket'
+import toast from 'react-hot-toast'
 
 export default function AdminPendingPage() {
   const [pending, setPending] = useState<any[]>([])
@@ -13,12 +14,12 @@ export default function AdminPendingPage() {
     socket.on('new-doctor-registration', (data: any) => {
       // prepend new registration
       setPending((s) => [data, ...s])
-      alert(`New doctor registered: ${data.email}`)
+      toast.info(`New doctor registered: ${data.email}`)
     })
     socket.on('doctor-approved', (data: any) => {
       // remove from pending if present
       setPending((s) => s.filter((u) => u.id !== data.id))
-      alert(`Doctor approved: ${data.email}`)
+      toast.success(`Doctor approved: ${data.email}`)
     })
     return () => {
       socket.off('new-doctor-registration')
@@ -32,10 +33,10 @@ export default function AdminPendingPage() {
         headers: { Authorization: token ? `Bearer ${token}` : '' }
       })
       const json = await res.json()
-      if (!res.ok) return alert('Error fetching pending: ' + (json.message || ''))
+      if (!res.ok) return toast.error('Error fetching pending: ' + (json.message || ''))
       setPending(json.pending || [])
     } catch (err: any) {
-      alert('Network error: ' + String(err.message || err))
+      toast.error('Network error: ' + String(err.message || err))
     }
   }
 
@@ -47,11 +48,11 @@ export default function AdminPendingPage() {
         headers: { Authorization: token ? `Bearer ${token}` : '' }
       })
       const json = await res.json()
-      if (!res.ok) return alert('Error: ' + (json.message || ''))
+      if (!res.ok) return toast.error('Error: ' + (json.message || ''))
       setPending((s) => s.filter((u) => u.id !== id))
-      alert('Approved')
+      toast.success('Approved')
     } catch (err: any) {
-      alert('Network error: ' + String(err.message || err))
+      toast.error('Network error: ' + String(err.message || err))
     }
   }
 
@@ -63,11 +64,11 @@ export default function AdminPendingPage() {
         headers: { Authorization: token ? `Bearer ${token}` : '' }
       })
       const json = await res.json()
-      if (!res.ok) return alert('Error: ' + (json.message || ''))
+      if (!res.ok) return toast.error('Error: ' + (json.message || ''))
       setPending((s) => s.filter((u) => u.id !== id))
-      alert('Rejected')
+      toast.success('Rejected')
     } catch (err: any) {
-      alert('Network error: ' + String(err.message || err))
+      toast.error('Network error: ' + String(err.message || err))
     }
   }
 

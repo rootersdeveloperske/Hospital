@@ -4,7 +4,8 @@ import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { getSocket } from '../../../lib/socket'
+import { getSocket } from '@/lib/socket'
+import toast from 'react-hot-toast'
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),
@@ -25,8 +26,7 @@ export default function TokenPage() {
   useEffect(() => {
     const socket = getSocket()
     socket.on('new-token', (data: any) => {
-      // basic alert - replace with your toast/shadcn integration
-      alert(`New token created: ${String(data.tokenNo)} for ${data.patient?.name}`)
+      toast.success(`New token created: ${String(data.tokenNo)} for ${data.patient?.name}`)
     })
     return () => {
       socket.off('new-token')
@@ -42,13 +42,13 @@ export default function TokenPage() {
       })
       const json = await res.json()
       if (!res.ok) {
-        alert('Error: ' + (json.message || 'Unknown'))
+        toast.error('Error: ' + (json.message || 'Unknown'))
         return
       }
-      alert(`Token created: ${json.patient.tokenNo}`)
+      toast.success(`Token created: ${json.patient.tokenNo}`)
       reset()
     } catch (err: any) {
-      alert('Network error: ' + String(err.message || err))
+      toast.error('Network error: ' + String(err.message || err))
     }
   }
 

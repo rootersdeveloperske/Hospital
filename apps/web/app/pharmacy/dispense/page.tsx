@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { getSocket } from '@/lib/socket'
+import toast from 'react-hot-toast'
 
 export default function PharmacyDispensePage() {
   const [tokenNo, setTokenNo] = useState('')
@@ -18,13 +19,12 @@ export default function PharmacyDispensePage() {
         headers: { Authorization: token ? `Bearer ${token}` : '' }
       })
       const json = await res.json()
-      if (!res.ok) return alert('Error: ' + (json.message || 'Not found'))
+      if (!res.ok) return toast.error('Error: ' + (json.message || 'Not found'))
       setData(json)
-      // map prescriptions to items with stock info
       const mapped = json.prescriptions.map((p: any) => ({ medicineId: p.medicineId, name: p.medicine.name, quantity: p.quantity, unitPrice: p.medicine.price, stock: p.medicine.stock }))
       setItems(mapped)
     } catch (err: any) {
-      alert('Network error: ' + String(err.message || err))
+      toast.error('Network error: ' + String(err.message || err))
     } finally {
       setLoading(false)
     }
@@ -39,7 +39,7 @@ export default function PharmacyDispensePage() {
   }
 
   async function dispense() {
-    if (!tokenNo) return alert('Enter token no')
+    if (!tokenNo) return toast.error('Enter token no')
     setLoading(true)
     try {
       const payload = { tokenNo: Number(tokenNo), items: items.map((it) => ({ medicineId: it.medicineId, quantity: Number(it.quantity) })), taxPercent: tax }
@@ -49,18 +49,15 @@ export default function PharmacyDispensePage() {
         body: JSON.stringify(payload)
       })
       const json = await res.json()
-      if (!res.ok) return alert('Error: ' + (json.message || 'Could not dispense'))
-      alert('Dispensed. Total: ' + json.receipt.total)
-      // simple receipt view
-      console.log('receipt', json.receipt)
-      // notify other clients
+      if (!res.ok) return toast.error('Error: ' + (json.message || 'Could not dispense'))
+      toast.success('Dispensed. Total: ' + json.receipt.total)
       const socket = getSocket()
       socket.emit('pharmacy-dispensed', { tokenNo: Number(tokenNo), receipt: json.receipt })
       setData(null)
       setItems([])
       setTokenNo('')
     } catch (err: any) {
-      alert('Network error: ' + String(err.message || err))
+      toast.error('Network error: ' + String(err.message || err))
     } finally {
       setLoading(false)
     }

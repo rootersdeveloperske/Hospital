@@ -1,5 +1,6 @@
 import prisma from '../prisma'
 import { Server as IOServer } from 'socket.io'
+import { sendEmail } from './mailer'
 
 export async function checkAndEmitAlerts(io: IOServer) {
   try {
@@ -15,10 +16,27 @@ export async function checkAndEmitAlerts(io: IOServer) {
 
     if (lowStock.length > 0) {
       io.emit('low-stock-alert', { count: lowStock.length, items: lowStock })
+      // send email to admins
+      try {
+        const admins = await prisma.user.findMany({ where: { role: 'ADMIN' } })
+        for (const a of admins) {
+          await sendEmail(a.email, 'Low stock alert', `There are ${lowStock.length} medicines below the stock threshold.`, `<p>There are <strong>${lowStock.length}</strong> medicines below the stock threshold.</p>`)
+        }
+      } catch (e) {
+        console.warn('Failed to send low-stock emails', e)
+      }
     }
 
     if (nearExpiry.length > 0) {
       io.emit('expiry-alert', { count: nearExpiry.length, items: nearExpiry })
+      try {
+        const admins = await prisma.user.findMany({ where: { role: 'ADMIN' } })
+        for (const a of admins) {
+          await sendEmail(a.email, 'Expiry alert', `There are ${nearExpiry.length} medicines nearing expiry.`, `<p>There are <strong>${nearExpiry.length}</strong> medicines nearing expiry.</p>`)
+        }
+      } catch (e) {
+        console.warn('Failed to send expiry emails', e)
+      }
     }
 
     // Also emit a dashboard-updated event with summary
