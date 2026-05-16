@@ -8,20 +8,41 @@ async function main() {
   const existing = await prisma.user.findUnique({ where: { email: adminEmail } })
   if (existing) {
     console.log('Admin already exists')
-    return
+  } else {
+    const hashed = await bcrypt.hash('123', 10)
+    const admin = await prisma.user.create({
+      data: {
+        name: 'Admin',
+        email: adminEmail,
+        password: hashed,
+        role: 'ADMIN',
+        isApproved: true
+      }
+    })
+    console.log('Created admin:', admin.email)
   }
 
-  const hashed = await bcrypt.hash('123', 10)
-  const admin = await prisma.user.create({
-    data: {
-      name: 'Admin',
-      email: adminEmail,
-      password: hashed,
-      role: 'ADMIN',
-      isApproved: true
-    }
-  })
-  console.log('Created admin:', admin.email)
+  // optional: create a sample approved doctor for testing
+  const doctorEmail = 'doctor1@example.com'
+  const existingDoc = await prisma.user.findUnique({ where: { email: doctorEmail } })
+  if (!existingDoc) {
+    const hashedDoc = await bcrypt.hash('123', 10)
+    const doctor = await prisma.user.create({
+      data: {
+        name: 'Dr. Test',
+        email: doctorEmail,
+        password: hashedDoc,
+        role: 'DOCTOR',
+        specialization: 'General',
+        qualification: 'MBBS',
+        fee: 10.0,
+        isApproved: true
+      }
+    })
+    console.log('Created sample doctor:', doctor.email)
+  } else {
+    console.log('Sample doctor already exists')
+  }
 
   // optional: create a couple of sample medicines
   const meds = [
