@@ -1,24 +1,53 @@
 import { Router } from 'express'
+import prisma from '../prisma'
 
 const router = Router()
 
 // GET /api/medicines
 router.get('/', async (req, res) => {
-  // TODO: return list of medicines
-  res.json({ message: 'list medicines - implement' })
+  try {
+    const medicines = await prisma.medicine.findMany({ orderBy: { name: 'asc' } })
+    return res.json({ medicines })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ message: 'Internal server error' })
+  }
 })
 
-// CRUD handlers placeholder
+// POST /api/medicines
 router.post('/', async (req, res) => {
-  res.json({ message: 'create medicine - implement' })
+  const payload = req.body
+  try {
+    const med = await prisma.medicine.create({ data: payload })
+    return res.status(201).json({ medicine: med })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ message: 'Internal server error' })
+  }
 })
 
+// PUT /api/medicines/:id
 router.put('/:id', async (req, res) => {
-  res.json({ message: 'update medicine - implement', id: req.params.id })
+  const { id } = req.params
+  try {
+    const med = await prisma.medicine.update({ where: { id }, data: req.body })
+    return res.json({ medicine: med })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ message: 'Internal server error' })
+  }
 })
 
+// DELETE /api/medicines/:id
 router.delete('/:id', async (req, res) => {
-  res.json({ message: 'delete medicine - implement', id: req.params.id })
+  const { id } = req.params
+  try {
+    await prisma.medicine.delete({ where: { id } })
+    return res.json({ message: 'deleted' })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ message: 'Internal server error' })
+  }
 })
 
 export default router
