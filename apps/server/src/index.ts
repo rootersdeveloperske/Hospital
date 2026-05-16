@@ -11,6 +11,9 @@ import patientsRouter from './routes/patients'
 import consultationsRouter from './routes/consultations'
 import medicinesRouter from './routes/medicines'
 import pharmacyRouter from './routes/pharmacy'
+import alertsRouter from './routes/alerts'
+import dashboardRouter from './routes/dashboard'
+import { checkAndEmitAlerts } from './utils/alertsChecker'
 
 dotenv.config()
 
@@ -45,6 +48,8 @@ app.use('/api/patients', patientsRouter)
 app.use('/api/consultations', consultationsRouter)
 app.use('/api/medicines', medicinesRouter)
 app.use('/api/pharmacy', pharmacyRouter)
+app.use('/api/alerts', alertsRouter)
+app.use('/api/dashboard', dashboardRouter)
 
 async function ensureStartup() {
   try {
@@ -63,4 +68,17 @@ ensureStartup()
     server.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`)
     })
+
+    // Run alert checks periodically
+    const intervalMinutes = Number(process.env.ALERT_CHECK_INTERVAL_MINUTES || '5')
+    setInterval(() => {
+      try {
+        checkAndEmitAlerts(io)
+      } catch (e) {
+        console.warn('Error running scheduled alert checker', e)
+      }
+    }, intervalMinutes * 60 * 1000)
+
+    // Run immediate initial check
+    checkAndEmitAlerts(io).catch((e) => console.warn('Initial alert check failed', e))
   })
