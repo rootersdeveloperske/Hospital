@@ -1,0 +1,13 @@
+{
+  "/_not-found": "app/_not-found.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/admin/dashboard/page": "app/admin/dashboard/page.js",
+  "/admin/pending/page": "app/admin/pending/page.js",
+  "/admin/reports/page": "app/admin/reports/page.js",
+  "/admin/stock-alerts/page": "app/admin/stock-alerts/page.js",
+  "/doctor/consultation/[id]/page": "app/doctor/consultation/[id]/page.js",
+  "/doctor/dashboard/page": "app/doctor/dashboard/page.js",
+  "/page": "app/page.js",
+  "/pharmacy/dispense/page": "app/pharmacy/dispense/page.js",
+  "/receptionist/token/page": "app/receptionist/token/page.js"
+}
